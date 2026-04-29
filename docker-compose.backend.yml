@@ -1,0 +1,35 @@
+# ------------------------------------------------------------
+# PROYECTO-BACKEND LAYER (Spring Boot API)
+# Ejecutar después de DB/Liquibase:
+#   docker compose -f proyecto-backend/docker-compose.backend.yml up -d --build
+# Requiere red externa ya creada por el compose de DB: api_app-network
+# ------------------------------------------------------------
+services:
+  backend:
+    build:
+      # Este compose vive dentro de /proyecto-backend
+      context: .
+      dockerfile: Dockerfile
+    container_name: backend_app
+    ports:
+      # API pública
+      - "8080:8080"
+    environment:
+      # Conexión a PostgreSQL por alias de red "db"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/tareas_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    healthcheck:
+      # El backend se considera sano cuando Swagger responde
+      test: ["CMD", "curl", "-f", "http://localhost:8080/swagger-ui.html"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    # Se conecta a la red ya existente creada por la capa DB
+    external: true
+    name: api_app-network
